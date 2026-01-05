@@ -107,6 +107,24 @@ export default function App() {
     setFollowingList(data?.map(f => f.following_id) || []);
   }
 
+  async function loadFollowers(userId) {
+  const { data, error } = await supabase
+    .from('follows')
+    .select(`
+      follower_id,
+      profiles:follower_id (id, username, name, avatar_url)
+    `)
+    .eq('following_id', userId);
+
+  if (error) {
+    console.error('Erro ao carregar seguidores:', error);
+    return;
+  }
+
+  setFollowersList(data || []);
+}
+
+  
   async function loadPosts() {
     const { data } = await supabase
       .from('posts')
