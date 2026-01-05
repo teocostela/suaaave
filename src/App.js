@@ -950,6 +950,20 @@ async function handleDeleteAccount() {
               <button className="cancel-btn" onClick={handleSignOut} style={{ marginTop: '20px' }}>
                 Sair
               </button>
+                  <button
+  onClick={handleDeleteAccount}
+  style={{
+    marginTop: '12px',
+    background: 'transparent',
+    color: '#d11a2a',
+    border: '1px solid #d11a2a',
+    padding: '10px 14px',
+    borderRadius: '6px',
+    cursor: 'pointer'
+  }}
+>
+  Excluir minha conta
+</button>
             </div>
           </div>
 
