@@ -1241,51 +1241,58 @@ async function handleDeleteAccount() {
           </div>
         </div>
       )}
-    </div>
-{showFollowers && (
-  <div className="modal-overlay" onClick={() => setShowFollowers(false)}>
-    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-      <div className="modal-header">
-        <div className="modal-title">Seguidores</div>
-        <button
-          className="modal-close"
-          onClick={() => setShowFollowers(false)}
-        >
-          ✕
-        </button>
-      </div>
+          {/* Post Modal */}
+      {selectedPost && (
+        ...
+      )}
 
-      <div className="modal-body">
-        {followersList.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#8e8e8e' }}>
-            Ninguém te segue ainda
-          </div>
-        ) : (
-          followersList.map(item => (
-            <div
-              key={item.follower_id}
-              className="search-result-item"
-              onClick={() => {
-                setShowFollowers(false);
-                viewProfile(item.profiles.id);
-              }}
-            >
-              {renderAvatar(item.profiles)}
-              <div className="search-result-info">
-                <div className="search-result-username">
-                  @{item.profiles.username}
-                </div>
-                <div className="search-result-name">
-                  {item.profiles.name}
-                </div>
-              </div>
+      {/* Followers Modal */}
+      {showFollowers && (
+        <div className="modal-overlay" onClick={() => setShowFollowers(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">Seguidores</div>
+              <button
+                className="modal-close"
+                onClick={() => setShowFollowers(false)}
+              >
+                ✕
+              </button>
             </div>
-          ))
-        )}
-      </div>
-    </div>
-  </div>
-)}
 
+            <div className="modal-body">
+              {followersList.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#8e8e8e' }}>
+                  Ninguém te segue ainda
+                </div>
+              ) : (
+                followersList.map(item => (
+                  <div
+                    key={item.follower_id}
+                    className="search-result-item"
+                    onClick={() => {
+                      setShowFollowers(false);
+                      viewProfile(item.profiles.id);
+                    }}
+                  >
+                    {renderAvatar(item.profiles)}
+                    <div className="search-result-info">
+                      <div className="search-result-username">
+                        @{item.profiles.username}
+                      </div>
+                      <div className="search-result-name">
+                        {item.profiles.name}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }
+
