@@ -25,18 +25,21 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .logo {
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 400;
-  letter-spacing: 0.5px;
-  color: #1f1f1f;
+  letter-spacing: 0.4px;
 }
 
 .header-icons {
   display: flex;
-  gap: 20px;
+  gap: 22px;
+  align-items: center;
 }
 
 .icon-btn {
@@ -799,15 +802,7 @@ body {
 
 /* Back Button */
 .back-btn {
-  padding: 10px 20px;
-  background: #fff;
-  border: 1px solid #dbdbdb;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 20px;
-  color: #262626;
+  display: none;
 }
 
 .back-btn:hover {
@@ -925,4 +920,8 @@ body {
   gap: 10px;
   margin-bottom: 20px;
   flex-wrap: wrap;
+}
+
+.share-profile-btn {
+  display: none;
 }
