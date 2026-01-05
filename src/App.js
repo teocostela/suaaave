@@ -944,10 +944,20 @@ async function handleDeleteAccount() {
                   </span>{' '}
                   <span className="stat-label">fotos</span>
                 </div>
-                <div className="stat-item">
-                  <span className="stat-number">{followStats[user.id]?.followers || 0}</span>{' '}
-                  <span className="stat-label">seguidores</span>
-                </div>
+                <div
+  className="stat-item"
+  style={{ cursor: 'pointer' }}
+  onClick={() => {
+    loadFollowers(user.id);
+    setShowFollowers(true);
+  }}
+>
+  <span className="stat-number">
+    {followStats[user.id]?.followers || 0}
+  </span>{' '}
+  <span className="stat-label">seguidores</span>
+</div>
+
                 <div className="stat-item">
                   <span className="stat-number">{followStats[user.id]?.following || 0}</span>{' '}
                   <span className="stat-label">seguindo</span>
