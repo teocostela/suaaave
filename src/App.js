@@ -21,6 +21,8 @@ export default function App() {
   const [todayPosted, setTodayPosted] = useState(false);
   
   // Profile states
+  const [followersList, setFollowersList] = useState([]);
+  const [showFollowers, setShowFollowers] = useState(false);
   const [profile, setProfile] = useState(null);
   const [viewingProfile, setViewingProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(false);
