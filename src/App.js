@@ -22,6 +22,7 @@ export default function App() {
   
   // Profile states
   const [profile, setProfile] = useState(null);
+  const [viewingProfile, setViewingProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editName, setEditName] = useState('');
   const [editUsername, setEditUsername] = useState('');
@@ -30,6 +31,15 @@ export default function App() {
   const [editLink, setEditLink] = useState('');
   const [editAvatar, setEditAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
+  
+  // Follow states
+  const [followStats, setFollowStats] = useState({});
+  const [isFollowing, setIsFollowing] = useState({});
+  
+  // Comment states
+  const [comments, setComments] = useState({});
+  const [commentText, setCommentText] = useState('');
+  const [showComments, setShowComments] = useState({});
   
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null);
@@ -53,6 +63,7 @@ export default function App() {
     if (user) {
       loadPosts();
       checkTodayPost();
+      loadFollowStats();
     }
   }, [user]);
 
@@ -79,12 +90,81 @@ export default function App() {
       .from('posts')
       .select(`
         *,
-        profiles:user_id (username, name, avatar_url),
+        profiles:user_id (id, username, name, avatar_url),
         likes (user_id)
       `)
       .order('created_at', { ascending: false });
     
     setPosts(data || []);
+    
+    // Load comments for all posts
+    if (data) {
+      data.forEach(post => loadComments(post.id));
+    }
+  }
+
+  async function loadFollowStats() {
+    if (!user) return;
+    
+    // Get all profiles
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id');
+    
+    if (!profiles) return;
+    
+    const stats = {};
+    const following = {};
+    
+    for (const prof of profiles) {
+      // Count followers
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', prof.id);
+      
+      // Count following
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', prof.id);
+      
+      stats[prof.id] = {
+        followers: followersCount || 0,
+        following: followingCount || 0
+      };
+      
+      // Check if current user follows this profile
+      if (prof.id !== user.id) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('*')
+          .eq('follower_id', user.id)
+          .eq('following_id', prof.id)
+          .single();
+        
+        following[prof.id] = !!followData;
+      }
+    }
+    
+    setFollowStats(stats);
+    setIsFollowing(following);
+  }
+
+  async function loadComments(postId) {
+    const { data } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        profiles:user_id (username, avatar_url)
+      `)
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+    
+    setComments(prev => ({
+      ...prev,
+      [postId]: data || []
+    }));
   }
 
   async function checkTodayPost() {
@@ -239,6 +319,48 @@ export default function App() {
     loadPosts();
   }
 
+  async function toggleFollow(userId) {
+    if (isFollowing[userId]) {
+      // Unfollow
+      await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', user.id)
+        .eq('following_id', userId);
+    } else {
+      // Follow
+      await supabase
+        .from('follows')
+        .insert([{
+          follower_id: user.id,
+          following_id: userId
+        }]);
+    }
+    
+    loadFollowStats();
+  }
+
+  async function handleComment(postId) {
+    if (!commentText.trim()) return;
+    
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert([{
+          post_id: postId,
+          user_id: user.id,
+          comment_text: commentText
+        }]);
+      
+      if (error) throw error;
+      
+      setCommentText('');
+      loadComments(postId);
+    } catch (error) {
+      alert('Erro ao comentar: ' + error.message);
+    }
+  }
+
   async function handleUpdateProfile() {
     try {
       let avatarUrl = profile.avatar_url;
@@ -291,6 +413,17 @@ export default function App() {
     setEditLink(profile.link || '');
     setAvatarPreview(profile.avatar_url || null);
     setEditingProfile(true);
+  }
+
+  async function viewProfile(userId) {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    
+    setViewingProfile(data);
+    setView('viewing-profile');
   }
 
   function formatDate(dateStr) {
@@ -435,11 +568,21 @@ export default function App() {
               {posts.map(post => (
                 <div key={post.id} className="post-card">
                   <div className="post-header">
-                    {renderAvatar(post.profiles)}
-                    <div className="post-user-info">
-                      <div className="post-username">{post.profiles?.username}</div>
-                      <div className="post-date">{formatDate(post.created_at)}</div>
+                    <div onClick={() => viewProfile(post.profiles.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                      {renderAvatar(post.profiles)}
+                      <div className="post-user-info">
+                        <div className="post-username">{post.profiles?.username}</div>
+                        <div className="post-date">{formatDate(post.created_at)}</div>
+                      </div>
                     </div>
+                    {post.profiles.id !== user.id && (
+                      <button 
+                        className="follow-btn-small"
+                        onClick={() => toggleFollow(post.profiles.id)}
+                      >
+                        {isFollowing[post.profiles.id] ? 'Seguindo' : 'Seguir'}
+                      </button>
+                    )}
                   </div>
                   <img src={post.image_url} alt="" className="post-image" />
                   <div className="post-actions">
@@ -457,7 +600,10 @@ export default function App() {
                         </svg>
                       )}
                     </button>
-                    <button className="action-btn">
+                    <button 
+                      className="action-btn"
+                      onClick={() => setShowComments(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+                    >
                       <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                       </svg>
@@ -472,6 +618,39 @@ export default function App() {
                     <div className="post-caption">
                       <span className="caption-username">{post.profiles?.username}</span>
                       {post.caption}
+                    </div>
+                  )}
+                  
+                  {/* Comments Section */}
+                  {showComments[post.id] && (
+                    <div className="comments-section">
+                      {comments[post.id]?.map(comment => (
+                        <div key={comment.id} className="comment-item">
+                          <span className="comment-username">{comment.profiles?.username}</span>
+                          <span className="comment-text">{comment.comment_text}</span>
+                        </div>
+                      ))}
+                      <div className="comment-input-box">
+                        <input
+                          type="text"
+                          placeholder="Adicione um comentário..."
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              handleComment(post.id);
+                            }
+                          }}
+                          className="comment-input"
+                        />
+                        <button 
+                          onClick={() => handleComment(post.id)}
+                          className="comment-post-btn"
+                          disabled={!commentText.trim()}
+                        >
+                          Publicar
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -551,7 +730,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Profile */}
+      {/* Own Profile */}
       {view === 'profile' && profile && (
         <div className="profile-container">
           <div className="profile-header">
@@ -566,7 +745,6 @@ export default function App() {
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M12 1v6m0 6v6m6-12H6m6 0a6 6 0 0 0 0 12 6 6 0 0 0 0-12z"></path>
                   </svg>
-                  
                 </button>
               </div>
               <div className="profile-stats">
@@ -577,11 +755,11 @@ export default function App() {
                   <span className="stat-label">fotos</span>
                 </div>
                 <div className="stat-item">
-                  <span className="stat-number">{profile.followers || 1}</span>{' '}
+                  <span className="stat-number">{followStats[user.id]?.followers || 0}</span>{' '}
                   <span className="stat-label">seguidores</span>
                 </div>
                 <div className="stat-item">
-                  <span className="stat-number">{profile.following || 0}</span>{' '}
+                  <span className="stat-number">{followStats[user.id]?.following || 0}</span>{' '}
                   <span className="stat-label">seguindo</span>
                 </div>
               </div>
@@ -609,6 +787,75 @@ export default function App() {
             <div className="profile-grid">
               {posts
                 .filter(p => p.user_id === user.id)
+                .map(post => (
+                  <div key={post.id} className="grid-item" onClick={() => setSelectedPost(post)}>
+                    <img src={post.image_url} alt="" />
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Viewing Other Profile */}
+      {view === 'viewing-profile' && viewingProfile && (
+        <div className="profile-container">
+          <button className="back-btn" onClick={() => setView('feed')}>
+            ← Voltar
+          </button>
+          <div className="profile-header">
+            <div className="profile-avatar-section">
+              {renderAvatar(viewingProfile, 'large')}
+            </div>
+            <div className="profile-info">
+              <div className="profile-top">
+                <div className="profile-username">@{viewingProfile.username}</div>
+                {viewingProfile.id !== user.id && (
+                  <button 
+                    className="edit-profile-btn"
+                    onClick={() => toggleFollow(viewingProfile.id)}
+                  >
+                    {isFollowing[viewingProfile.id] ? 'Deixar de seguir' : 'Seguir'}
+                  </button>
+                )}
+              </div>
+              <div className="profile-stats">
+                <div className="stat-item">
+                  <span className="stat-number">
+                    {posts.filter(p => p.user_id === viewingProfile.id).length}
+                  </span>{' '}
+                  <span className="stat-label">fotos</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{followStats[viewingProfile.id]?.followers || 0}</span>{' '}
+                  <span className="stat-label">seguidores</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-number">{followStats[viewingProfile.id]?.following || 0}</span>{' '}
+                  <span className="stat-label">seguindo</span>
+                </div>
+              </div>
+              <div className="profile-bio-section">
+                <div className="profile-name">{viewingProfile.name}</div>
+                {viewingProfile.bio && <div className="profile-bio">{viewingProfile.bio}</div>}
+                {viewingProfile.location && (
+                  <div className="profile-location">
+                    📍 {viewingProfile.location}
+                  </div>
+                )}
+                {viewingProfile.link && (
+                  <a href={`https://${viewingProfile.link}`} className="profile-link" target="_blank" rel="noopener noreferrer">
+                    🔗 {viewingProfile.link}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-grid-container">
+            <div className="profile-grid">
+              {posts
+                .filter(p => p.user_id === viewingProfile.id)
                 .map(post => (
                   <div key={post.id} className="grid-item" onClick={() => setSelectedPost(post)}>
                     <img src={post.image_url} alt="" />
