@@ -892,3 +892,28 @@ body {
 .delete-btn:hover {
   background: #fef2f2;
 }
+
+/* Share Profile Button */
+.share-profile-btn {
+  padding: 7px 16px;
+  background: #fff;
+  border: 1px solid #10b981;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #10b981;
+  margin-left: 10px;
+}
+
+.share-profile-btn:hover {
+  background: #f0fdf4;
+}
+
+.profile-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
