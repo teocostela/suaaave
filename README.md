@@ -1,4 +1,4 @@
-# SUAAAVE 🌿
+# SUAAAVE 🌿 - Versão 5
 
 Uma rede social minimalista e intencional.
 
@@ -6,81 +6,90 @@ Uma rede social minimalista e intencional.
 
 ---
 
-## ⚠️ ANTES DE FAZER DEPLOY
+## ✨ NOVIDADES v5
+
+### 1. Lista de Seguidores/Seguindo
+- Clique nos números de "seguidores" ou "seguindo" no seu perfil
+- Veja a lista completa em um modal
+- Clique em qualquer pessoa para ver o perfil dela
+
+### 2. Link do Perfil
+- Botão "📎 Compartilhar" no seu perfil
+- Copia automaticamente o link: `suaaave2.vercel.app/seu_username`
+- Compartilhe com amigos!
+
+### 3. Horário do Brasil (Fortaleza)
+- Postagens seguem o fuso horário de Fortaleza/Brasil (UTC-3)
+- A virada do dia acontece à meia-noite de Fortaleza
+- Você só pode postar 1 foto por dia (horário do Brasil)
+
+---
+
+## 🔧 Instalação
 
 ### 1. Atualizar banco de dados
+Execute o SQL do arquivo `ATUALIZAR_BANCO.sql` no Supabase
 
-Acesse o Supabase → SQL Editor → New query
+### 2. Configurar email
+Siga instruções do arquivo `CONFIGURAR_EMAIL.md`
 
-Cole e execute o código do arquivo `ATUALIZAR_BANCO.sql`
-
-### 2. Configurar email (IMPORTANTE!)
-
-Siga as instruções do arquivo `CONFIGURAR_EMAIL.md`
-
-Resumo:
-- Supabase → Authentication → Providers → Email
-- **DESMARQUE** "Confirm email"
-- **MANTENHA** "Enable email provider"
+### 3. Deploy
+- Faça upload dos arquivos pro GitHub
+- Vercel faz deploy automático
 
 ---
 
-## Novidades da versão 4
+## 📦 Arquivos Novos
 
-### ✅ CORRIGIDO:
-- Sistema de seguir funcionando
-- Botão like ativo
-- Texto "Editar perfil" (removido ícone japonês)
-- Email não obrigatório para ativar conta
-
-### ✅ NOVO:
-- **Busca de usuários** (por nome ou @username)
-- **Feed vazio** quando não segue ninguém
-- **Editar legenda** da própria foto
-- **Excluir foto** postada
-- Feed mostra apenas posts de quem você segue
+- `src/utils.js` - Funções de timezone do Brasil
+- Modificações no `src/App.js` - Features novas
+- Modificações no `src/App.css` - Estilos novos
+- `src/index.js` atualizado (sem mudanças necessárias, mas incluído)
 
 ---
 
-## Como usar
+## 🎯 Como Usar
 
-### Buscar usuários:
-- Clique no ícone 🔍 no header
-- Digite nome ou @username
-- Clique no usuário para ver perfil
+### Ver seguidores/seguindo:
+1. Vá no seu perfil
+2. Clique no número de "seguidores" ou "seguindo"
+3. Modal abre com a lista
+4. Clique em qualquer pessoa para ver o perfil
 
-### Seguir usuários:
-- Clique no botão "Seguir" no feed ou perfil
-- Feed mostra apenas posts de quem você segue
+### Compartilhar perfil:
+1. Vá no seu perfil
+2. Clique em "📎 Compartilhar"
+3. Link copiado automaticamente
+4. Cole onde quiser!
 
-### Editar/Excluir post:
-- No seu próprio post, clique nos 3 pontinhos (⋮)
-- Escolha "Editar legenda" ou "Excluir foto"
-
-### Comentar:
-- Clique no ícone 💬
-- Digite e pressione Enter
-
----
-
-## Deploy
-
-1. Execute o SQL do banco de dados
-2. Configure o email no Supabase
-3. Faça upload dos arquivos pro GitHub
-4. Vercel faz deploy automático
+### Timezone do Brasil:
+- Funciona automaticamente
+- Virada do dia à meia-noite de Fortaleza
+- 1 foto por dia no horário do Brasil
 
 ---
 
-## Estrutura
+## 🐛 Todas as Correções (v4 → v5)
 
-```
-src/
-├── App.js          # Componente principal
-├── App.css         # Estilos
-├── supabaseClient.js  # Configuração Supabase
-└── index.js        # Entry point
+✅ Botão seguir funcionando  
+✅ Botão like ativo  
+✅ Busca de usuários  
+✅ Feed vazio quando não segue ninguém  
+✅ Editar legenda  
+✅ Excluir foto  
+✅ **NOVO:** Lista de seguidores/seguindo  
+✅ **NOVO:** Link do perfil  
+✅ **NOVO:** Timezone do Brasil  
 
-public/
-└── index.html      # HTML base
-```
+---
+
+## 📝 Notas Técnicas
+
+- React Router NÃO foi implementado (complexidade vs benefício)
+- Links do perfil funcionam via clipboard (copiar/colar)
+- Timezone usa `America/Fortaleza` (UTC-3)
+- Todas as features testadas e funcionando
+
+---
+
+Aproveite o SUAAAVE! 🌿✨
