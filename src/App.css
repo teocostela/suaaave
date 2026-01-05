@@ -156,7 +156,28 @@ body {
   font-size: 14px;
   color: #8e8e8e;
 }
+.feed-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  padding: 12px 0 8px;
+  margin-bottom: 12px;
+}
 
+.feed-tab {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #9a9a9a;
+  cursor: pointer;
+  padding: 6px 2px;
+}
+
+.feed-tab.active {
+  color: #1f1f1f;
+  font-weight: 500;
+  border-bottom: 1px solid #1f1f1f;
+}
 /* Post Card */
 .post-card {
   background: transparent;
