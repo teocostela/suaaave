@@ -11,10 +11,10 @@ body {
 }
 
 .app {
-  max-width: 935px;
+  max-width: 100%;
   margin: 0 auto;
   min-height: 100vh;
-  background: #fff;
+  background: transparent;
 }
 
 /* Header */
