@@ -7,6 +7,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('feed');
+  const [feedTab, setFeedTab] = useState('seguindo');
   
   // Auth states
   const [email, setEmail] = useState('');
@@ -747,6 +748,21 @@ export default function App() {
       {/* Feed */}
       {view === 'feed' && (
         <div className="feed-container">
+        <div className="feed-tabs">
+  <button
+    className={`feed-tab ${feedTab === 'seguindo' ? 'active' : ''}`}
+    onClick={() => setFeedTab('seguindo')}
+  >
+    Seguindo
+  </button>
+
+  <button
+    className={`feed-tab ${feedTab === 'geral' ? 'active' : ''}`}
+    onClick={() => setFeedTab('geral')}
+  >
+    Geral
+  </button>
+</div>
           {feedPosts.length === 0 ? (
             <div className="empty-feed">
               <svg width="64" height="64" fill="none" stroke="#dbdbdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 20px' }}>
