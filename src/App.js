@@ -4,24 +4,27 @@ import { getBrazilDate } from './utils';
 import './App.css';
 
 export default function App() {
+  // Core states
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('feed');
   const [feedTab, setFeedTab] = useState('seguindo');
-  
+
   // Auth states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [isLogin, setIsLogin] = useState(true);
-  
+
   // Post states
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState([]); // legado
+  const [followingPosts, setFollowingPosts] = useState([]);
+  const [globalPosts, setGlobalPosts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [caption, setCaption] = useState('');
   const [todayPosted, setTodayPosted] = useState(false);
-  
+
   // Profile states
   const [profile, setProfile] = useState(null);
   const [viewingProfile, setViewingProfile] = useState(null);
@@ -33,44 +36,49 @@ export default function App() {
   const [editLink, setEditLink] = useState('');
   const [editAvatar, setEditAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
-  
+
   // Follow states
   const [followStats, setFollowStats] = useState({});
   const [isFollowing, setIsFollowing] = useState({});
   const [followingList, setFollowingList] = useState([]);
-  
+
   // Comment states
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState({});
-  
+
   // Search states
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
-  
+
   // Edit post states
   const [editingPost, setEditingPost] = useState(null);
   const [editCaption, setEditCaption] = useState('');
-  
+
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null);
-  
-  // Followers/Following modal states
+
+  // Followers / Following modal states
   const [showFollowersList, setShowFollowersList] = useState(false);
   const [followersList, setFollowersList] = useState([]);
   const [followingListData, setFollowingListData] = useState([]);
   const [listType, setListType] = useState('followers');
 
+  // ======================
+  // AUTH / INIT
+  // ======================
   useEffect(() => {
     checkUser();
-    
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-      if (session?.user) {
-        loadProfile(session.user.id);
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user || null);
+        if (session?.user) {
+          loadProfile(session.user.id);
+        }
       }
-    });
+    );
 
     return () => {
       authListener?.subscription?.unsubscribe();
@@ -81,18 +89,42 @@ export default function App() {
     if (user) {
       loadFollowingList();
       loadPosts();
+      fetchGlobalPosts(); // 👈 FEED GERAL
       checkTodayPost();
       loadFollowStats();
     }
   }, [user]);
 
+  // ======================
+  // FUNCTIONS
+  // ======================
   async function checkUser() {
     const { data: { session } } = await supabase.auth.getSession();
     setUser(session?.user || null);
+
     if (session?.user) {
       await loadProfile(session.user.id);
     }
+
     setLoading(false);
+  }
+
+  async function fetchGlobalPosts() {
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        *,
+        profiles (
+          username,
+          avatar_url,
+          name
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (!error) {
+      setGlobalPosts(data);
+    }
   }
 
   async function loadProfile(userId) {
