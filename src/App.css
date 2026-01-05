@@ -11,7 +11,7 @@ body {
 }
 
 .app {
-  max-width: 100%;
+  max-width: 430px;      /* largura típica de celular */
   margin: 0 auto;
   min-height: 100vh;
   background: transparent;
