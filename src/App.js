@@ -363,7 +363,7 @@ export default function App() {
   }
 
   async function handleDeletePost(postId) {
-    if (!confirm('Tem certeza que deseja excluir esta foto?')) return;
+    if (!window.confirm('Tem certeza que deseja excluir esta foto?')) return;
     
     try {
       const { error } = await supabase
