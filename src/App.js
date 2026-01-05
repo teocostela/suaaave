@@ -35,11 +35,21 @@ export default function App() {
   // Follow states
   const [followStats, setFollowStats] = useState({});
   const [isFollowing, setIsFollowing] = useState({});
+  const [followingList, setFollowingList] = useState([]);
   
   // Comment states
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState({});
+  
+  // Search states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearch, setShowSearch] = useState(false);
+  
+  // Edit post states
+  const [editingPost, setEditingPost] = useState(null);
+  const [editCaption, setEditCaption] = useState('');
   
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null);
@@ -61,6 +71,7 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
+      loadFollowingList();
       loadPosts();
       checkTodayPost();
       loadFollowStats();
@@ -83,6 +94,15 @@ export default function App() {
       .eq('id', userId)
       .single();
     setProfile(data);
+  }
+
+  async function loadFollowingList() {
+    const { data } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', user.id);
+    
+    setFollowingList(data?.map(f => f.following_id) || []);
   }
 
   async function loadPosts() {
@@ -178,12 +198,36 @@ export default function App() {
     setTodayPosted(data && data.length > 0);
   }
 
+  async function handleSearch() {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .or(`username.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`)
+      .limit(10);
+    
+    setSearchResults(data || []);
+  }
+
+  useEffect(() => {
+    if (showSearch) {
+      handleSearch();
+    }
+  }, [searchQuery]);
+
   async function handleSignUp(e) {
     e.preventDefault();
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: window.location.origin
+      }
     });
 
     if (authError) {
@@ -210,7 +254,7 @@ export default function App() {
       if (profileError) {
         alert('Erro ao criar perfil: ' + profileError.message);
       } else {
-        alert('Conta criada! Verifique seu email.');
+        alert('Conta criada com sucesso! Você já pode fazer login.');
       }
     }
   }
@@ -300,44 +344,96 @@ export default function App() {
     }
   }
 
+  async function handleEditPost(postId) {
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .update({ caption: editCaption })
+        .eq('id', postId);
+      
+      if (error) throw error;
+      
+      setEditingPost(null);
+      setEditCaption('');
+      loadPosts();
+      alert('Legenda atualizada! ✨');
+    } catch (error) {
+      alert('Erro ao editar: ' + error.message);
+    }
+  }
+
+  async function handleDeletePost(postId) {
+    if (!confirm('Tem certeza que deseja excluir esta foto?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', postId);
+      
+      if (error) throw error;
+      
+      setSelectedPost(null);
+      loadPosts();
+      checkTodayPost();
+      alert('Foto excluída!');
+    } catch (error) {
+      alert('Erro ao excluir: ' + error.message);
+    }
+  }
+
   async function toggleLike(postId) {
+    if (!user) return;
+    
     const post = posts.find(p => p.id === postId);
+    if (!post) return;
+    
     const hasLiked = post.likes.some(l => l.user_id === user.id);
 
-    if (hasLiked) {
-      await supabase
-        .from('likes')
-        .delete()
-        .eq('post_id', postId)
-        .eq('user_id', user.id);
-    } else {
-      await supabase
-        .from('likes')
-        .insert([{ post_id: postId, user_id: user.id }]);
+    try {
+      if (hasLiked) {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('likes')
+          .insert([{ post_id: postId, user_id: user.id }]);
+      }
+      
+      loadPosts();
+    } catch (error) {
+      console.error('Erro ao curtir:', error);
     }
-
-    loadPosts();
   }
 
   async function toggleFollow(userId) {
-    if (isFollowing[userId]) {
-      // Unfollow
-      await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', user.id)
-        .eq('following_id', userId);
-    } else {
-      // Follow
-      await supabase
-        .from('follows')
-        .insert([{
-          follower_id: user.id,
-          following_id: userId
-        }]);
+    try {
+      if (isFollowing[userId]) {
+        // Unfollow
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+      } else {
+        // Follow
+        await supabase
+          .from('follows')
+          .insert([{
+            follower_id: user.id,
+            following_id: userId
+          }]);
+      }
+      
+      await loadFollowStats();
+      await loadFollowingList();
+      await loadPosts();
+    } catch (error) {
+      alert('Erro ao seguir: ' + error.message);
     }
-    
-    loadFollowStats();
   }
 
   async function handleComment(postId) {
@@ -396,6 +492,7 @@ export default function App() {
       if (error) throw error;
 
       await loadProfile(user.id);
+      await loadPosts();
       setEditingProfile(false);
       setEditAvatar(null);
       setAvatarPreview(null);
@@ -413,6 +510,11 @@ export default function App() {
     setEditLink(profile.link || '');
     setAvatarPreview(profile.avatar_url || null);
     setEditingProfile(true);
+  }
+
+  function openEditPost(post) {
+    setEditingPost(post.id);
+    setEditCaption(post.caption || '');
   }
 
   async function viewProfile(userId) {
@@ -452,6 +554,11 @@ export default function App() {
       </div>
     );
   }
+
+  // Filter posts to show only from people user follows
+  const feedPosts = followingList.length > 0 
+    ? posts.filter(post => followingList.includes(post.user_id) || post.user_id === user?.id)
+    : [];
 
   if (loading) {
     return (
@@ -533,6 +640,12 @@ export default function App() {
               <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
           </button>
+          <button className="icon-btn" onClick={() => { setView('search'); setShowSearch(true); }}>
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+          </button>
           <button className="icon-btn" onClick={() => setView('create')}>
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -548,24 +661,54 @@ export default function App() {
         </div>
       </header>
 
+      {/* Search */}
+      {view === 'search' && (
+        <div className="search-container">
+          <div className="search-box">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Buscar usuários..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="search-results">
+            {searchResults.length === 0 && searchQuery && (
+              <div className="empty-search">Nenhum usuário encontrado</div>
+            )}
+            {searchResults.map(result => (
+              <div key={result.id} className="search-result-item" onClick={() => viewProfile(result.id)}>
+                {renderAvatar(result)}
+                <div className="search-result-info">
+                  <div className="search-result-username">@{result.username}</div>
+                  <div className="search-result-name">{result.name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Feed */}
       {view === 'feed' && (
         <div className="feed-container">
-          {posts.length === 0 ? (
+          {feedPosts.length === 0 ? (
             <div className="empty-feed">
               <svg width="64" height="64" fill="none" stroke="#dbdbdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 20px' }}>
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <circle cx="8.5" cy="8.5" r="1.5"></circle>
                 <polyline points="21 15 16 10 5 21"></polyline>
               </svg>
-              <div className="empty-title">Bem-vindo ao suaaave</div>
+              <div className="empty-title">Você ainda não segue ninguém</div>
               <div className="empty-text">
-                Siga pessoas para ver suas fotos diárias
+                Busque pessoas para seguir e veja suas fotos diárias
               </div>
             </div>
           ) : (
             <>
-              {posts.map(post => (
+              {feedPosts.map(post => (
                 <div key={post.id} className="post-card">
                   <div className="post-header">
                     <div onClick={() => viewProfile(post.profiles.id)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
@@ -581,6 +724,15 @@ export default function App() {
                         onClick={() => toggleFollow(post.profiles.id)}
                       >
                         {isFollowing[post.profiles.id] ? 'Seguindo' : 'Seguir'}
+                      </button>
+                    )}
+                    {post.user_id === user.id && (
+                      <button className="icon-btn" onClick={() => openEditPost(post)}>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="1"></circle>
+                          <circle cx="12" cy="5" r="1"></circle>
+                          <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
                       </button>
                     )}
                   </div>
@@ -741,10 +893,7 @@ export default function App() {
               <div className="profile-top">
                 <div className="profile-username">@{profile.username}</div>
                 <button className="edit-profile-btn" onClick={openEditProfile}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 1v6m0 6v6m6-12H6m6 0a6 6 0 0 0 0 12 6 6 0 0 0 0-12z"></path>
-                  </svg>
+                  Editar perfil
                 </button>
               </div>
               <div className="profile-stats">
@@ -965,6 +1114,46 @@ export default function App() {
               </div>
               <button className="save-btn" onClick={handleUpdateProfile}>
                 Salvar alterações
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {editingPost && (
+        <div className="modal-overlay" onClick={() => setEditingPost(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-title">Editar publicação</div>
+              <button className="modal-close" onClick={() => setEditingPost(null)}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-field">
+                <label className="field-label">Legenda</label>
+                <textarea
+                  className="field-input"
+                  value={editCaption}
+                  onChange={(e) => setEditCaption(e.target.value.slice(0, 200))}
+                  maxLength={200}
+                  rows={3}
+                  placeholder="Escreva uma legenda..."
+                />
+                <div className="char-counter">{editCaption.length}/200</div>
+              </div>
+              <button className="save-btn" onClick={() => handleEditPost(editingPost)}>
+                Salvar alterações
+              </button>
+              <button className="delete-btn" onClick={() => {
+                const post = posts.find(p => p.id === editingPost);
+                if (post) {
+                  setEditingPost(null);
+                  handleDeletePost(post.id);
+                }
+              }}>
+                Excluir foto
               </button>
             </div>
           </div>
