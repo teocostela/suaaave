@@ -278,6 +278,27 @@ export default function App() {
     setProfile(null);
     setView('feed');
   }
+async function handleDeleteAccount() {
+  const confirmDelete = window.confirm(
+    'Tem certeza que deseja excluir sua conta?\n\nEssa ação é irreversível e todos os seus dados serão apagados.'
+  );
+
+  if (!confirmDelete) return;
+
+  const { error } = await supabase.rpc('delete_my_account');
+
+  if (error) {
+    alert('Erro ao excluir a conta.');
+    console.error(error);
+    return;
+  }
+
+  // segurança extra: encerra sessão local
+  await supabase.auth.signOut();
+
+  // recarrega a aplicação
+  window.location.reload();
+}
 
   async function handleImageSelect(e) {
     const file = e.target.files[0];
