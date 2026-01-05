@@ -130,9 +130,9 @@ body {
 
 /* Feed */
 .feed-container {
-  max-width: 470px;
+  max-width: 520px;
   margin: 0 auto;
-  padding: 20px 0;
+  padding: 32px 16px;
 }
 
 .empty-feed {
@@ -159,17 +159,17 @@ body {
 
 /* Post Card */
 .post-card {
-  background: #fff;
-  border: 1px solid #dbdbdb;
-  border-radius: 3px;
-  margin-bottom: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  margin-bottom: 48px;
 }
 
 .post-header {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  gap: 12px;
+  padding: 0 0 12px 0;
+  gap: 10px;
 }
 
 .avatar {
@@ -208,18 +208,19 @@ body {
 
 .post-username {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .post-date {
   font-size: 12px;
-  color: #8e8e8e;
+  color: #9a9a9a;
 }
 
 .post-image {
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
+  border-radius: 12px;
   display: block;
 }
 
