@@ -1289,40 +1289,64 @@ export default function App() {
         </div>
       )}
 
-      {/* Followers/Following Modal */}
+           {/* Followers / Following Modal */}
       {showFollowersList && (
-        <div className="modal-overlay" onClick={() => setShowFollowersList(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowFollowersList(false)}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="modal-header">
               <div className="modal-title">
                 {listType === 'followers' ? 'Seguidores' : 'Seguindo'}
               </div>
-              <button className="modal-close" onClick={() => setShowFollowersList(false)}>
+              <button
+                className="modal-close"
+                onClick={() => setShowFollowersList(false)}
+              >
                 ✕
               </button>
             </div>
+
             <div className="modal-body">
-              {(listType === 'followers' ? followersList : followingListData).map(person => (
-                <div key={person.id} className="search-result-item" onClick={() => {
-                  setShowFollowersList(false);
-                  viewProfile(person.id);
-                }}>
+              {(listType === 'followers'
+                ? followersList
+                : followingListData
+              ).map((person) => (
+                <div
+                  key={person.id}
+                  className="search-result-item"
+                  onClick={() => {
+                    setShowFollowersList(false);
+                    viewProfile(person.id);
+                  }}
+                >
                   {renderAvatar(person)}
                   <div className="search-result-info">
-                    <div className="search-result-username">@{person.username}</div>
-                    <div className="search-result-name">{person.name}</div>
+                    <div className="search-result-username">
+                      @{person.username}
+                    </div>
+                    <div className="search-result-name">
+                      {person.name}
+                    </div>
                   </div>
                 </div>
               ))}
-              {(listType === 'followers' ? followersList : followingListData).length === 0 && (
+
+              {(listType === 'followers'
+                ? followersList
+                : followingListData
+              ).length === 0 && (
                 <div className="empty-search">
-                  {listType === 'followers' ? 'Nenhum seguidor ainda' : 'Não está seguindo ninguém'}
+                  {listType === 'followers'
+                    ? 'Nenhum seguidor ainda'
+                    : 'Não está seguindo ninguém'}
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-    </div>
-  );
-}
