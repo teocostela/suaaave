@@ -569,64 +569,74 @@ export default function App() {
   }
 
   // Auth Screen
-  if (!user) {
-    return (
-      <div className="auth-container">
-        <div className="auth-box">
-          <div className="auth-logo">suaaave</div>
-          <form onSubmit={isLogin ? handleSignIn : handleSignUp}>
-            {!isLogin && (
-              <>
-                <input
-                  type="text"
-                  className="auth-input"
-                  placeholder="Nome completo"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  className="auth-input"
-                  placeholder="Nome de usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </>
-            )}
-            <input
-              type="email"
-              className="auth-input"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              className="auth-input"
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button type="submit" className="auth-btn">
-              {isLogin ? 'Entrar' : 'Cadastrar'}
-            </button>
-          </form>
+if (!user) {
+  return (
+    <div className="auth-container">
+      <div className="auth-content">
+        <h1 className="auth-logo">suaaave.</h1>
+        <div className="auth-subtitle">
+          <p>Uma foto por dia.</p>
+          <p>Um diário coletivo visual.</p>
+        </div>
+        
+        <div className="auth-form">
+          <div className="auth-box">
+            <form onSubmit={isLogin ? handleSignIn : handleSignUp}>
+              {!isLogin && (
+                <>
+                  <input
+                    type="text"
+                    className="auth-input"
+                    placeholder="Nome completo"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    className="auth-input"
+                    placeholder="Nome de usuário"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </>
+              )}
+              <input
+                type="email"
+                className="auth-input"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input
+                type="password"
+                className="auth-input"
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button type="submit" className="auth-btn">
+                {isLogin ? 'Entrar' : 'Criar conta'}
+              </button>
+            </form>
+          </div>
+          
           <div className="auth-divider">
             <button
               className="auth-link"
               onClick={() => setIsLogin(!isLogin)}
             >
-              {isLogin ? 'Criar nova conta' : 'Já tem conta? Entre'}
+              {isLogin ? 'Não tem conta? Criar conta' : 'Já tem conta? Entrar'}
             </button>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // Main App
   return (
