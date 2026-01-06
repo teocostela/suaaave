@@ -1,30 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import { getBrazilDate } from './utils';
 import './App.css';
 
 export default function App() {
-  // Core states
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('feed');
-  const [feedTab, setFeedTab] = useState('seguindo');
-
+  
   // Auth states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [isLogin, setIsLogin] = useState(true);
-
+  
   // Post states
-  const [posts, setPosts] = useState([]); // legado
-  const [followingPosts, setFollowingPosts] = useState([]);
-  const [globalPosts, setGlobalPosts] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [caption, setCaption] = useState('');
   const [todayPosted, setTodayPosted] = useState(false);
-
+  
   // Profile states
   const [profile, setProfile] = useState(null);
   const [viewingProfile, setViewingProfile] = useState(null);
@@ -36,44 +31,38 @@ export default function App() {
   const [editLink, setEditLink] = useState('');
   const [editAvatar, setEditAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
-
+  
   // Follow states
   const [followStats, setFollowStats] = useState({});
   const [isFollowing, setIsFollowing] = useState({});
   const [followingList, setFollowingList] = useState([]);
-
+  
   // Comment states
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState('');
   const [showComments, setShowComments] = useState({});
-
+  
   // Search states
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
-
+  
   // Edit post states
   const [editingPost, setEditingPost] = useState(null);
   const [editCaption, setEditCaption] = useState('');
-
+  
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null);
 
-
-  // ======================
-  // AUTH / INIT
-  // ======================
   useEffect(() => {
     checkUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user || null);
-        if (session?.user) {
-          loadProfile(session.user.id);
-        }
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        loadProfile(session.user.id);
       }
-    );
+    });
 
     return () => {
       authListener?.subscription?.unsubscribe();
@@ -84,42 +73,18 @@ export default function App() {
     if (user) {
       loadFollowingList();
       loadPosts();
-      fetchGlobalPosts(); // 👈 FEED GERAL
       checkTodayPost();
       loadFollowStats();
     }
   }, [user]);
 
-  // ======================
-  // FUNCTIONS
-  // ======================
   async function checkUser() {
     const { data: { session } } = await supabase.auth.getSession();
     setUser(session?.user || null);
-
     if (session?.user) {
       await loadProfile(session.user.id);
     }
-
     setLoading(false);
-  }
-
-  async function fetchGlobalPosts() {
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        *,
-        profiles (
-          username,
-          avatar_url,
-          name
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (!error) {
-      setGlobalPosts(data);
-    }
   }
 
   async function loadProfile(userId) {
@@ -223,7 +188,7 @@ export default function App() {
   }
 
   async function checkTodayPost() {
-    const today = getBrazilDate();
+    const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
       .from('posts')
       .select('id')
@@ -362,7 +327,7 @@ export default function App() {
             user_id: user.id,
             image_url: publicUrl,
             caption: caption,
-            posted_date: getBrazilDate()
+            posted_date: new Date().toISOString().split('T')[0]
           }
         ]);
 
@@ -490,42 +455,6 @@ export default function App() {
     } catch (error) {
       alert('Erro ao comentar: ' + error.message);
     }
-  }
-
-  async function loadFollowersListData() {
-    try {
-      const { data } = await supabase
-        .from('follows')
-        .select('follower_id, profiles!follows_follower_id_fkey(id, username, name, avatar_url)')
-        .eq('following_id', user.id);
-      
-      const followers = data?.map(f => f.profiles).filter(Boolean) || [];
-      setFollowersList(followers);
-    } catch (error) {
-      console.error('Erro ao carregar seguidores:', error);
-      setFollowersList([]);
-    }
-  }
-
-  async function loadFollowingListData() {
-    try {
-      const { data } = await supabase
-        .from('follows')
-        .select('following_id, profiles!follows_following_id_fkey(id, username, name, avatar_url)')
-        .eq('follower_id', user.id);
-      
-      const following = data?.map(f => f.profiles).filter(Boolean) || [];
-      setFollowingListData(following);
-    } catch (error) {
-      console.error('Erro ao carregar seguindo:', error);
-      setFollowingListData([]);
-    }
-  }
-
-  function shareProfile() {
-    const url = `${window.location.origin}/${profile.username}`;
-    navigator.clipboard.writeText(url);
-    alert(`Link copiado! 📎\n\n${url}`);
   }
 
   async function handleUpdateProfile() {
@@ -764,30 +693,7 @@ export default function App() {
 
       {/* Feed */}
       {view === 'feed' && (
-  <>
-    <div className="feed-tabs">
-      <button
-        className={`feed-tab ${feedTab === 'seguindo' ? 'active' : ''}`}
-        onClick={() => setFeedTab('seguindo')}
-      >
-        seguindo
-      </button>
-
-      <button
-        className={`feed-tab ${feedTab === 'geral' ? 'active' : ''}`}
-        onClick={() => setFeedTab('geral')}
-      >
-        geral
-      </button>
-    </div>
-
-    <div className="feed-container">
-      {feedTab === 'seguindo' && renderFollowingPosts()}
-      {feedTab === 'geral' && renderGlobalPosts()}
-    </div>
-  </>
-)}
-
+        <div className="feed-container">
           {feedPosts.length === 0 ? (
             <div className="empty-feed">
               <svg width="64" height="64" fill="none" stroke="#dbdbdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 20px' }}>
@@ -989,9 +895,6 @@ export default function App() {
                 <button className="edit-profile-btn" onClick={openEditProfile}>
                   Editar perfil
                 </button>
-                <button className="share-profile-btn" onClick={shareProfile}>
-                  📎 Compartilhar
-                </button>
               </div>
               <div className="profile-stats">
                 <div className="stat-item">
@@ -1000,11 +903,11 @@ export default function App() {
                   </span>{' '}
                   <span className="stat-label">fotos</span>
                 </div>
-                <div className="stat-item" onClick={() => openFollowersList('followers')} style={{cursor: 'pointer'}}>
+                <div className="stat-item">
                   <span className="stat-number">{followStats[user.id]?.followers || 0}</span>{' '}
                   <span className="stat-label">seguidores</span>
                 </div>
-                <div className="stat-item" onClick={() => openFollowersList('following')} style={{cursor: 'pointer'}}>
+                <div className="stat-item">
                   <span className="stat-number">{followStats[user.id]?.following || 0}</span>{' '}
                   <span className="stat-label">seguindo</span>
                 </div>
@@ -1273,65 +1176,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-           {/* Followers / Following Modal */}
-      {showFollowersList && (
-        <div
-          className="modal-overlay"
-          onClick={() => setShowFollowersList(false)}
-        >
-          <div
-            className="modal-content"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-header">
-              <div className="modal-title">
-                {listType === 'followers' ? 'Seguidores' : 'Seguindo'}
-              </div>
-              <button
-                className="modal-close"
-                onClick={() => setShowFollowersList(false)}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {(listType === 'followers'
-                ? followersList
-                : followingListData
-              ).map((person) => (
-                <div
-                  key={person.id}
-                  className="search-result-item"
-                  onClick={() => {
-                    setShowFollowersList(false);
-                    viewProfile(person.id);
-                  }}
-                >
-                  {renderAvatar(person)}
-                  <div className="search-result-info">
-                    <div className="search-result-username">
-                      @{person.username}
-                    </div>
-                    <div className="search-result-name">
-                      {person.name}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {(listType === 'followers'
-                ? followersList
-                : followingListData
-              ).length === 0 && (
-                <div className="empty-search">
-                  {listType === 'followers'
-                    ? 'Nenhum seguidor ainda'
-                    : 'Não está seguindo ninguém'}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+    </div>
+  );
+}
