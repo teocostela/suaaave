@@ -59,11 +59,6 @@ export default function App() {
   // Modal state
   const [selectedPost, setSelectedPost] = useState(null);
 
-  // Followers / Following modal states
-  const [showFollowersList, setShowFollowersList] = useState(false);
-  const [followersList, setFollowersList] = useState([]);
-  const [followingListData, setFollowingListData] = useState([]);
-  const [listType, setListType] = useState('followers');
 
   // ======================
   // AUTH / INIT
