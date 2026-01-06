@@ -6,6 +6,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('feed');
+  const [needsOnboarding, setNeedsOnboarding] = useState(false); // ← ADICIONAR
   
   // Auth states
   const [email, setEmail] = useState('');
@@ -219,21 +220,27 @@ export default function App() {
     }
   }, [searchQuery]);
 
-  async function handleSignUp(e) {
-    e.preventDefault();
-    
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin
-      }
-    });
-
-    if (authError) {
-      alert('Erro ao criar conta: ' + authError.message);
-      return;
+ async function handleSignUp(e) {
+  e.preventDefault();
+  
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: window.location.origin
     }
+  });
+
+  if (authError) {
+    alert('Erro ao criar conta: ' + authError.message);
+    return;
+  }
+
+  if (authData.user) {
+    setUser(authData.user);
+    setNeedsOnboarding(true); // ← Ativa o onboarding
+  }
+}
 
     if (authData.user) {
       const { error: profileError } = await supabase
