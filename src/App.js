@@ -779,22 +779,30 @@ export default function App() {
 
       {/* Feed */}
       {view === 'feed' && (
-        <div className="feed-container">
-        <div className="feed-tabs">
-  <button
-    className={`feed-tab ${feedTab === 'seguindo' ? 'active' : ''}`}
-    onClick={() => setFeedTab('seguindo')}
-  >
-    Seguindo
-  </button>
+  <>
+    <div className="feed-tabs">
+      <button
+        className={`feed-tab ${feedTab === 'seguindo' ? 'active' : ''}`}
+        onClick={() => setFeedTab('seguindo')}
+      >
+        seguindo
+      </button>
 
-  <button
-    className={`feed-tab ${feedTab === 'geral' ? 'active' : ''}`}
-    onClick={() => setFeedTab('geral')}
-  >
-    Geral
-  </button>
-</div>
+      <button
+        className={`feed-tab ${feedTab === 'geral' ? 'active' : ''}`}
+        onClick={() => setFeedTab('geral')}
+      >
+        geral
+      </button>
+    </div>
+
+    <div className="feed-container">
+      {feedTab === 'seguindo' && renderFollowingPosts()}
+      {feedTab === 'geral' && renderGlobalPosts()}
+    </div>
+  </>
+)}
+
           {feedPosts.length === 0 ? (
             <div className="empty-feed">
               <svg width="64" height="64" fill="none" stroke="#dbdbdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 20px' }}>
