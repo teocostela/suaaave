@@ -522,16 +522,6 @@ export default function App() {
     }
   }
 
-  function openFollowersList(type) {
-    setListType(type);
-    if (type === 'followers') {
-      loadFollowersListData();
-    } else {
-      loadFollowingListData();
-    }
-    setShowFollowersList(true);
-  }
-
   function shareProfile() {
     const url = `${window.location.origin}/${profile.username}`;
     navigator.clipboard.writeText(url);
