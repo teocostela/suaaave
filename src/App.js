@@ -567,6 +567,43 @@ export default function App() {
     ? posts.filter(post => followingList.includes(post.user_id) || post.user_id === user?.id)
     : [];
 
+async function handleCompleteOnboarding(e) {
+  e.preventDefault();
+  
+  if (!name || !username) {
+    alert('Nome e username são obrigatórios');
+    return;
+  }
+
+  try {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert([
+        {
+          id: user.id,
+          username: username.toLowerCase().replace(/[^a-z0-9_]/g, ''),
+          name: name,
+          bio: editBio || '',
+          location: editLocation || '',
+          link: editLink || '',
+          avatar_url: null,
+          is_company: false
+        }
+      ]);
+
+    if (profileError) {
+      alert('Erro ao criar perfil: ' + profileError.message);
+      return;
+    }
+
+    await loadProfile(user.id);
+    setNeedsOnboarding(false);
+    alert('Perfil criado com sucesso! ✨');
+  } catch (error) {
+    alert('Erro: ' + error.message);
+  }
+}
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
